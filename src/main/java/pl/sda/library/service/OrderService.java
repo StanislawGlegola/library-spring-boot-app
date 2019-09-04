@@ -5,9 +5,8 @@ import pl.sda.library.model.Book;
 import pl.sda.library.repository.BookRepository;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Optional;
-import java.util.Set;
-
 /*
 serwis springowy (zarzadzany przez springa dzieki adnotacji @Service)
 Warswa serwisow wg sztuki sluzy jako miejsce dla logiki biznesowej (wymagan od klienta)
@@ -16,6 +15,7 @@ Warswa serwisow wg sztuki sluzy jako miejsce dla logiki biznesowej (wymagan od k
 public class OrderService {
 
     private final BookRepository bookRepository;
+
 
     /*
    wstrzykujemy przez konstruktor bean springowy BookRepository deklaracja moglaby wygladac tak:
@@ -30,21 +30,22 @@ public class OrderService {
     }
 
     /*
-    jedynym zadaniem tej metody jest przekazanie otrzymanego tytulu z kontrolera do repozytorium i zwrocenie Setu ksiazek.
-    Nie dokonujemy tutaj filtrowania, gdyz takie rzeczy powinna robic baza danych, a wiec wartswa repozytoriow
-     */
-    public Set<Book> getBooks(String title) {
-        return bookRepository.getBooks(title);
-    }
-
-    /*
     Metoda sluzaca do wypozyczenia ksiazki. Tutaj jest juz kawalek logiki biznesowej obliczajacy date oddania ksiazki ->
     LocalDate.now().plusDays(30)
     wyliczona wartosc oddania ksiazki wraz z id ksiazki od wypozyczenia przekazywana jest do repozytorium,
      aby zapisac date oddania "w bazie" i pobrac ksiazke. Jesli udalo sie wypozyczyc ksiazke to zwracamy ja do kontrolera owrapowana w Optional
      */
     public Optional<Book> rentBook(Long id) {
-        return bookRepository.rentBook(id, LocalDate.now().plusDays(30));
+
+        Optional<Book> foundBook = bookRepository.findById(id);
+        if (foundBook.isPresent() && foundBook.get().getReturnDate() == null) {
+            Book book = foundBook.get();
+            book.setReturnDate((LocalDate.now().plusDays(30)));
+            bookRepository.save(book);
+            return Optional.of(book);
+        } else {
+            return Optional.empty();
+        }
     }
 
     /*
@@ -52,8 +53,8 @@ public class OrderService {
     serwis to przepycha otrzymana ksiazke dalej do repozytorium. Jesli udalo sie dodac ksiazke "do bazy"
      to zwracamy ja z powrotem do kontrolera wraz z uzupelnianym id.
      */
-    public Book addBook(Book book) {
-        return bookRepository.addBook(book);
+    public Book save(Book book) {
+        return bookRepository.save(book);
     }
 
     /*
@@ -61,7 +62,16 @@ public class OrderService {
     serwis to przepycha id ksiazki do usuniecia dalej do repozytorium. Jesli uda sie usunac ksiazke to zwracamy flage z wartoscia true,
     jesli nie to z false
      */
-    public boolean removeBook(Long id) {
-        return bookRepository.removeBook(id);
+    public void removeBook(Long id) {
+        bookRepository.deleteById(id);
     }
+
+    public List<Book> getBooks(String title) {
+        if (title == null) {
+            return bookRepository.findAll();
+        } else {
+            return bookRepository.findByTitle(title);
+        }
+    }
+
 }

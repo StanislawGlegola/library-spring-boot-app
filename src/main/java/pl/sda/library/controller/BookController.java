@@ -40,7 +40,7 @@ public class BookController {
      */
     @GetMapping(value = "/books", produces = "application/json")
     public Set<Book> getBooks(@RequestParam(required = false) String title) {
-        return orderService.getBooks(title);
+        return (Set<Book>) orderService.getBooks(title);
     }
 
     /*
@@ -71,7 +71,7 @@ public class BookController {
      */
     @PostMapping(value = "/book/add", consumes = "application/json")
     public ResponseEntity<Long> addBook(@RequestBody Book book) {
-        Book addedBook = orderService.addBook(book);
+        Book addedBook = orderService.save(book);
         return new ResponseEntity<>(addedBook.getId(), HttpStatus.CREATED); //jesli ksiazke udalo sie dodac to zwracamy w body jej ID i status sukcesu 201 CREATED mowiacy o utworzeniu zasobu
     }
 
@@ -82,10 +82,7 @@ public class BookController {
      */
     @DeleteMapping("/book/remove/{id}")
     public ResponseEntity<Void> removeBook(@PathVariable Long id) {
-        boolean deleted = orderService.removeBook(id);
-        if (deleted) {
+        orderService.removeBook(id);
             return new ResponseEntity<>(HttpStatus.NO_CONTENT);//jesli ksiazka zostala usunieta to zwracamy kod sukcesu 204 NO_CONTENT
-        }
-        return new ResponseEntity<>(HttpStatus.NOT_FOUND);//jesli nie ma ksiazki o danym id to zwracamy kod bledu 404 NOT_FOUND
     }
 }

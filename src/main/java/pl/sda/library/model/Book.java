@@ -3,14 +3,24 @@ package pl.sda.library.model;
 import com.fasterxml.jackson.annotation.JsonGetter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
+import javax.persistence.SequenceGenerator;
 import java.time.LocalDate;
 import java.util.Objects;
 
 /*
 model ksiazki (id, autor, tytul, data do oddania, jesli jest wypozyczona)
  */
+
+@Entity
 public class Book {
 
+    @Id
+    @GeneratedValue(generator = "bookSeq")
+    //to informuje ze jest sekwencja o takiej nazwie która identyfikje identyfikatory. jej znazwa to book,seq).
+    @SequenceGenerator(name = "bookSeq", sequenceName = "book_seq", allocationSize = 1)
     private Long id;
     private String author;
     private String title;
